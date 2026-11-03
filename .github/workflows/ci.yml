@@ -51,10 +51,21 @@ jobs:
       E2E_CONTROL_URL: http://127.0.0.1:4100
     steps:
       - uses: actions/checkout@v4
+      # Fail with a clear reason (not "Input required and not supplied: token") when the secret is not configured.
+      # The value is never printed.
+      - name: Require BACKEND_READ_TOKEN
+        env:
+          BACKEND_READ_TOKEN: ${{ secrets.BACKEND_READ_TOKEN }}
+        run: |
+          if [ -z "$BACKEND_READ_TOKEN" ]; then
+            echo "::error title=BACKEND_READ_TOKEN missing::Add a read-only token for cortexAI-2025/Aiworkpay-v2 as the repository secret BACKEND_READ_TOKEN. This e2e job is NOT validated until then."
+            exit 1
+          fi
+      # The backend that V2 ships (PR #10), not the older claude/agent-ecosystem-v1
       - uses: actions/checkout@v4
         with:
           repository: cortexAI-2025/Aiworkpay-v2
-          ref: claude/agent-ecosystem-v1
+          ref: integration/backend-v2
           path: backend
           token: ${{ secrets.BACKEND_READ_TOKEN }}
       - uses: actions/setup-node@v4
