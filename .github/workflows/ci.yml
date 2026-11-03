@@ -5,6 +5,10 @@ on:
     branches: [main, master, "claude/**"]
   pull_request:
 
+# Least privilege: the workflow only reads code. The cross-repository read uses BACKEND_READ_TOKEN, not GITHUB_TOKEN.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -68,6 +72,7 @@ jobs:
           ref: integration/backend-v2
           path: backend
           token: ${{ secrets.BACKEND_READ_TOKEN }}
+          persist-credentials: false # the token is not left in backend/.git/config for the following steps
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
