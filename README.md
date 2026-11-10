@@ -9,6 +9,8 @@ pip install "git+https://github.com/cortexAI-2025/AIWorkPay-SDK-v1"
 
 Python 3.9+, une seule dépendance (`httpx`). Le paquet n'est pas encore publié sur PyPI.
 
+Exemples exécutables dans [`examples/`](examples) : `quickstart.py`, `async_parallel.py`, `webhook_server.py`, `register_agent.py` (auto-inscription, désactivée par défaut côté serveur).
+
 ## Démarrage
 
 ```python
