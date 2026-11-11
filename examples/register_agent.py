@@ -6,6 +6,7 @@ L'auto-inscription est DÉSACTIVÉE par défaut côté serveur (404 tant qu'elle
 La clé n'est affichée qu'une fois : elle est écrite dans un fichier en lecture seule pour vous
 (~/.aiworkpay_key), jamais affichée. Plafonds par défaut : 50 € par mission, 300 € par mois.
 """
+
 import os
 import sys
 from pathlib import Path

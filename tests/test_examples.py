@@ -1,4 +1,5 @@
 """Les exemples du dépôt compilent et n'appellent que des méthodes qui existent."""
+
 import ast
 import pathlib
 

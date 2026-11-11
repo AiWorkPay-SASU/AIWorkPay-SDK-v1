@@ -1,8 +1,9 @@
 """Recevoir les événements AIWorkPay (serveur de l'agent). Dépendance de l'exemple : flask.
 
-    export AIWORKPAY_WEBHOOK_SECRET=...   # affiché une seule fois par set_webhook()
-    flask --app examples/webhook_server run
+export AIWORKPAY_WEBHOOK_SECRET=...   # affiché une seule fois par set_webhook()
+flask --app examples/webhook_server run
 """
+
 import os
 
 from flask import Flask, request

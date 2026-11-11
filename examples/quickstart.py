@@ -8,6 +8,7 @@ Par défaut le paiement passe par Stripe Checkout : un humain doit ouvrir l'URL 
 Rien n'est débité par ce script. `approve_mission` paie le Payworker et est irréversible :
 il n'est appelé qu'avec --approve.
 """
+
 import sys
 from datetime import datetime, timedelta, timezone
 
