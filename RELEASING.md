@@ -21,7 +21,10 @@ La publication utilise **Trusted Publishing** (GitHub prouve son identité à Py
 1. Changer le numéro dans `aiworkpay/_version.py` **et** `pyproject.toml` (le workflow refuse s'ils diffèrent).
 2. *Actions* → *Publish* → *Run workflow* → `testpypi`, puis tester :
    `pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ aiworkpay`
-3. Créer une *Release* GitHub dont le tag est `v<version>` (par exemple `v2.0.0`) : le workflow construit,
-   vérifie (`twine check`, installation du wheel dans un environnement vierge) puis publie sur PyPI.
+3. Lancer à la main *Actions → Publish → Run workflow* : `target = testpypi` d'abord (essai à blanc), puis `target = pypi` avec
+   `confirm` = `PUBLISH v<version> TO PYPI` (par exemple `PUBLISH v2.0.0 TO PYPI`). Le workflow construit, vérifie (`twine check`,
+   installation du wheel dans un environnement vierge) puis publie. **Créer une Release GitHub ne publie plus rien** (le déclencheur
+   `release` a été retiré pour qu'un clic ne puisse pas publier par accident). Trois verrous : la phrase de confirmation, l'environnement
+   GitHub `pypi` avec *Required reviewers* (Settings → Environments), et le *publisher* de confiance déclaré sur PyPI.
 
 Après la première publication, le « pending publisher » devient un publisher normal du projet `aiworkpay`.

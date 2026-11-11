@@ -1,14 +1,13 @@
 # Publishes the package to PyPI with Trusted Publishing: no token is stored anywhere.
 # One-time setup (see RELEASING.md): register this workflow as a trusted publisher on PyPI.
 #
-#   - Release published on GitHub  -> PyPI (the release tag must be v<version>)
+# Publishing is MANUAL ONLY. Creating or publishing a GitHub release does nothing (no `release` trigger).
 #   - Manual run, target "testpypi" -> TestPyPI (a dry run that cannot harm anything)
-#   - Manual run, target "pypi"     -> PyPI
+#   - Manual run, target "pypi"     -> PyPI, and only if `confirm` is typed exactly: PUBLISH v<version> TO PYPI
+# Two more locks, set on GitHub (see RELEASING.md): the `pypi` environment with a required reviewer, and the PyPI trusted publisher.
 name: Publish
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       target:
@@ -16,6 +15,10 @@ on:
         type: choice
         options: [testpypi, pypi]
         default: testpypi
+      confirm:
+        description: 'Only for target "pypi": type exactly  PUBLISH v<version> TO PYPI  (for example PUBLISH v2.0.0 TO PYPI)'
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -30,13 +33,17 @@ jobs:
           python-version: "3.12"
       - run: pip install build twine
 
-      - name: The release tag matches the package version
-        if: github.event_name == 'release'
+      - name: Versions agree, and a PyPI run was explicitly confirmed
+        env:
+          TARGET: ${{ inputs.target }}
+          CONFIRM: ${{ inputs.confirm }}
         run: |
           version="$(python -c 'exec(open("aiworkpay/_version.py").read()); print(__version__)')"
           declared="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
           test "$version" = "$declared" || { echo "::error::aiworkpay/_version.py ($version) and pyproject.toml ($declared) differ"; exit 1; }
-          test "${GITHUB_REF_NAME}" = "v${version}" || { echo "::error::tag ${GITHUB_REF_NAME} is not v${version}"; exit 1; }
+          if [ "$TARGET" = "pypi" ]; then
+            test "$CONFIRM" = "PUBLISH v${version} TO PYPI" || { echo "::error::PyPI publication refused: type exactly 'PUBLISH v${version} TO PYPI' in the confirm input"; exit 1; }
+          fi
 
       - run: python -m build
       - run: twine check --strict dist/*
@@ -53,7 +60,7 @@ jobs:
           path: dist/
 
   publish-testpypi:
-    if: github.event_name == 'workflow_dispatch' && inputs.target == 'testpypi'
+    if: github.repository == 'cortexAI-2025/AIWorkPay-SDK-v1' && inputs.target == 'testpypi'
     needs: build
     runs-on: ubuntu-latest
     environment: testpypi
@@ -69,7 +76,7 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   publish-pypi:
-    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.target == 'pypi')
+    if: github.repository == 'cortexAI-2025/AIWorkPay-SDK-v1' && inputs.target == 'pypi'
     needs: build
     runs-on: ubuntu-latest
     # Add "required reviewers" to this environment to approve each release by hand
