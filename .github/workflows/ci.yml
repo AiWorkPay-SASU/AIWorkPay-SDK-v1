@@ -2,16 +2,16 @@ name: CI
 
 on:
   push:
-    branches: [main, master, "claude/**"]
+    branches: [main, master, "claude/**", "integration/**"]
   pull_request:
 
-# Least privilege: the workflow only reads code. The cross-repository read uses BACKEND_READ_TOKEN, not GITHUB_TOKEN.
+# Least privilege: the workflow only reads code and uses no secret.
 permissions:
   contents: read
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Python 3.9 is not provided on ubuntu-latest (Ubuntu 26.04) any more
     strategy:
       fail-fast: false
       matrix:
@@ -29,62 +29,18 @@ jobs:
         run: mypy
       - run: pytest -q
 
-  # The 12-step scenario against the real AIWorkPay server (PostgreSQL + Stripe simulator, no secret, no real payment)
-  e2e:
-    runs-on: ubuntu-latest
-    needs: test
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: aw_e2e
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aw_e2e
-      AUTH_SECRET: ci-placeholder-secret-min-32-chars-ok
-      STRIPE_SECRET_KEY: sk_test_placeholder
-      STRIPE_WEBHOOK_SECRET: whsec_placeholder
-      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3300
-      E2E_CONTROL_URL: http://127.0.0.1:4100
+  # Known vulnerabilities in what the package pulls in for its users (runtime dependencies of pyproject.toml).
+  audit:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      # Fail with a clear reason (not "Input required and not supplied: token") when the secret is not configured.
-      # The value is never printed.
-      - name: Require BACKEND_READ_TOKEN
-        env:
-          BACKEND_READ_TOKEN: ${{ secrets.BACKEND_READ_TOKEN }}
-        run: |
-          if [ -z "$BACKEND_READ_TOKEN" ]; then
-            echo "::error title=BACKEND_READ_TOKEN missing::Add a read-only token for cortexAI-2025/Aiworkpay-v2 as the repository secret BACKEND_READ_TOKEN. This e2e job is NOT validated until then."
-            exit 1
-          fi
-      # The backend that V2 ships (PR #10), not the older claude/agent-ecosystem-v1
-      - uses: actions/checkout@v4
-        with:
-          repository: cortexAI-2025/Aiworkpay-v2
-          ref: integration/backend-v2
-          path: backend
-          token: ${{ secrets.BACKEND_READ_TOKEN }}
-          persist-credentials: false # the token is not left in backend/.git/config for the following steps
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Start the isolated backend
-        working-directory: backend
-        run: |
-          npm ci && npx prisma generate && npm run build
-          nohup npm run e2e:harness > ../harness.log 2>&1 &
-          for i in $(seq 1 90); do grep -q E2E_HARNESS_READY ../harness.log && break; sleep 2; done
-          grep -q E2E_HARNESS_READY ../harness.log || { cat ../harness.log; exit 1; }
-      - run: pip install -e ".[dev]"
-      - run: pytest tests/test_e2e.py -q
+          python-version: "3.13"
+      - run: pip install pip-audit
+      - name: Runtime dependencies have no known vulnerability
+        run: pip-audit --strict --progress-spinner off .
+
+  # End-to-end (the 12-step scenario of tests/test_e2e.py against the real AIWorkPay server) does NOT run here: this
+  # repository is public and cannot read the private backend. It runs in the backend's CI, job "SDK end-to-end", which
+  # checks out this repository. A green run of this workflow therefore validates unit, contract and typing only.

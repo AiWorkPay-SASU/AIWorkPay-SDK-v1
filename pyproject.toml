@@ -28,9 +28,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/cortexAI-2025/AIWorkPay-SDK-v1"
-Source = "https://github.com/cortexAI-2025/AIWorkPay-SDK-v1"
-Issues = "https://github.com/cortexAI-2025/AIWorkPay-SDK-v1/issues"
+Homepage = "https://github.com/AiWorkPay-SASU/AIWorkPay-SDK-v1"
+Source = "https://github.com/AiWorkPay-SASU/AIWorkPay-SDK-v1"
+Issues = "https://github.com/AiWorkPay-SASU/AIWorkPay-SDK-v1/issues"
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "pytest-asyncio>=0.24", "ruff", "mypy>=1.10"]
