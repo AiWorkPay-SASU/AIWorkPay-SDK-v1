@@ -62,13 +62,13 @@ jobs:
           BACKEND_READ_TOKEN: ${{ secrets.BACKEND_READ_TOKEN }}
         run: |
           if [ -z "$BACKEND_READ_TOKEN" ]; then
-            echo "::error title=BACKEND_READ_TOKEN missing::Add a read-only token for cortexAI-2025/Aiworkpay-v2 as the repository secret BACKEND_READ_TOKEN. This e2e job is NOT validated until then."
+            echo "::error title=BACKEND_READ_TOKEN missing::Add a read-only token for AiWorkPay-SASU/Aiworkpay-v2 as the repository secret BACKEND_READ_TOKEN. This e2e job is NOT validated until then."
             exit 1
           fi
       # The backend that V2 ships (PR #10), not the older claude/agent-ecosystem-v1
       - uses: actions/checkout@v4
         with:
-          repository: cortexAI-2025/Aiworkpay-v2
+          repository: AiWorkPay-SASU/Aiworkpay-v2
           ref: integration/backend-v2
           path: backend
           token: ${{ secrets.BACKEND_READ_TOKEN }}

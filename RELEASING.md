@@ -8,7 +8,7 @@ La publication utilise **Trusted Publishing** (GitHub prouve son identité à Py
 1. Créer un compte sur <https://pypi.org> (et sur <https://test.pypi.org>), avec l'authentification à deux facteurs.
 2. Sur PyPI → *Your account* → *Publishing* → **Add a new pending publisher** :
    - nom du projet : `aiworkpay`
-   - propriétaire : `cortexAI-2025`, dépôt : `AIWorkPay-SDK-v1`
+   - propriétaire : `AiWorkPay-SASU`, dépôt : `AIWorkPay-SDK-v1`
    - workflow : `publish.yml`, environnement : `pypi`
 
    Même chose sur TestPyPI avec l'environnement `testpypi`.

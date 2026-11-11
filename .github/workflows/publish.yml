@@ -60,7 +60,7 @@ jobs:
           path: dist/
 
   publish-testpypi:
-    if: github.repository == 'cortexAI-2025/AIWorkPay-SDK-v1' && inputs.target == 'testpypi'
+    if: github.repository == 'AiWorkPay-SASU/AIWorkPay-SDK-v1' && inputs.target == 'testpypi'
     needs: build
     runs-on: ubuntu-latest
     environment: testpypi
@@ -76,7 +76,7 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   publish-pypi:
-    if: github.repository == 'cortexAI-2025/AIWorkPay-SDK-v1' && inputs.target == 'pypi'
+    if: github.repository == 'AiWorkPay-SASU/AIWorkPay-SDK-v1' && inputs.target == 'pypi'
     needs: build
     runs-on: ubuntu-latest
     # Add "required reviewers" to this environment to approve each release by hand
