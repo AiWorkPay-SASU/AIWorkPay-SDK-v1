@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master, "claude/**"]
+    branches: [main, master, "claude/**", "integration/**"]
   pull_request:
 
 # Least privilege: the workflow only reads code and uses no secret.
