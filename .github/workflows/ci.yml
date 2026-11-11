@@ -5,7 +5,7 @@ on:
     branches: [main, master, "claude/**"]
   pull_request:
 
-# Least privilege: the workflow only reads code. The cross-repository read uses the deploy key BACKEND_DEPLOY_KEY, not GITHUB_TOKEN.
+# Least privilege: the workflow only reads code and uses no secret.
 permissions:
   contents: read
 
@@ -29,62 +29,18 @@ jobs:
         run: mypy
       - run: pytest -q
 
-  # The 12-step scenario against the real AIWorkPay server (PostgreSQL + Stripe simulator, no secret, no real payment)
-  e2e:
-    runs-on: ubuntu-latest
-    needs: test
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: aw_e2e
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 12
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aw_e2e
-      AUTH_SECRET: ci-placeholder-secret-min-32-chars-ok
-      STRIPE_SECRET_KEY: sk_test_placeholder
-      STRIPE_WEBHOOK_SECRET: whsec_placeholder
-      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3300
-      E2E_CONTROL_URL: http://127.0.0.1:4100
+  # Known vulnerabilities in what the package pulls in for its users (runtime dependencies of pyproject.toml).
+  audit:
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      # Fail with a clear reason when the secret is not configured.
-      # The value is never printed.
-      - name: Require BACKEND_DEPLOY_KEY
-        env:
-          BACKEND_DEPLOY_KEY: ${{ secrets.BACKEND_DEPLOY_KEY }}
-        run: |
-          if [ -z "$BACKEND_DEPLOY_KEY" ]; then
-            echo "::error title=BACKEND_DEPLOY_KEY missing::Add the private half of a read-only deploy key of AiWorkPay-SASU/Aiworkpay-v2 as the repository secret BACKEND_DEPLOY_KEY (see the backend's docs/CI_SECRETS.md). This e2e job is NOT validated until then."
-            exit 1
-          fi
-      # The backend's default branch (no `ref`): what is merged and what gets deployed. It follows a rename of that branch.
-      - uses: actions/checkout@v4
-        with:
-          repository: AiWorkPay-SASU/Aiworkpay-v2
-          path: backend
-          # Read-only deploy key scoped to that single repository: tied to no personal account, no expiry surprise.
-          ssh-key: ${{ secrets.BACKEND_DEPLOY_KEY }}
-          persist-credentials: false # the key is not left configured for the following steps
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Start the isolated backend
-        working-directory: backend
-        run: |
-          npm ci && npx prisma generate && npm run build
-          nohup npm run e2e:harness > ../harness.log 2>&1 &
-          for i in $(seq 1 90); do grep -q E2E_HARNESS_READY ../harness.log && break; sleep 2; done
-          grep -q E2E_HARNESS_READY ../harness.log || { cat ../harness.log; exit 1; }
-      - run: pip install -e ".[dev]"
-      - run: pytest tests/test_e2e.py -q
+          python-version: "3.13"
+      - run: pip install pip-audit
+      - name: Runtime dependencies have no known vulnerability
+        run: pip-audit --strict --progress-spinner off .
+
+  # End-to-end (the 12-step scenario of tests/test_e2e.py against the real AIWorkPay server) does NOT run here: this
+  # repository is public and cannot read the private backend. It runs in the backend's CI, job "SDK end-to-end", which
+  # checks out this repository. A green run of this workflow therefore validates unit, contract and typing only.
