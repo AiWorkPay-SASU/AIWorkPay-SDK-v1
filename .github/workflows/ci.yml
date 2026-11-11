@@ -5,7 +5,7 @@ on:
     branches: [main, master, "claude/**"]
   pull_request:
 
-# Least privilege: the workflow only reads code. The cross-repository read uses BACKEND_READ_TOKEN, not GITHUB_TOKEN.
+# Least privilege: the workflow only reads code. The cross-repository read uses the deploy key BACKEND_DEPLOY_KEY, not GITHUB_TOKEN.
 permissions:
   contents: read
 
@@ -65,11 +65,10 @@ jobs:
             echo "::error title=BACKEND_DEPLOY_KEY missing::Add the private half of a read-only deploy key of AiWorkPay-SASU/Aiworkpay-v2 as the repository secret BACKEND_DEPLOY_KEY (see the backend's docs/CI_SECRETS.md). This e2e job is NOT validated until then."
             exit 1
           fi
-      # The backend that V2 ships (PR #10), not the older claude/agent-ecosystem-v1
+      # The backend's default branch (no `ref`): what is merged and what gets deployed. It follows a rename of that branch.
       - uses: actions/checkout@v4
         with:
           repository: AiWorkPay-SASU/Aiworkpay-v2
-          ref: integration/backend-v2
           path: backend
           # Read-only deploy key scoped to that single repository: tied to no personal account, no expiry surprise.
           ssh-key: ${{ secrets.BACKEND_DEPLOY_KEY }}
