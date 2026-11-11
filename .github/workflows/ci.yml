@@ -55,14 +55,14 @@ jobs:
       E2E_CONTROL_URL: http://127.0.0.1:4100
     steps:
       - uses: actions/checkout@v4
-      # Fail with a clear reason (not "Input required and not supplied: token") when the secret is not configured.
+      # Fail with a clear reason when the secret is not configured.
       # The value is never printed.
-      - name: Require BACKEND_READ_TOKEN
+      - name: Require BACKEND_DEPLOY_KEY
         env:
-          BACKEND_READ_TOKEN: ${{ secrets.BACKEND_READ_TOKEN }}
+          BACKEND_DEPLOY_KEY: ${{ secrets.BACKEND_DEPLOY_KEY }}
         run: |
-          if [ -z "$BACKEND_READ_TOKEN" ]; then
-            echo "::error title=BACKEND_READ_TOKEN missing::Add a read-only token for AiWorkPay-SASU/Aiworkpay-v2 as the repository secret BACKEND_READ_TOKEN. This e2e job is NOT validated until then."
+          if [ -z "$BACKEND_DEPLOY_KEY" ]; then
+            echo "::error title=BACKEND_DEPLOY_KEY missing::Add the private half of a read-only deploy key of AiWorkPay-SASU/Aiworkpay-v2 as the repository secret BACKEND_DEPLOY_KEY (see the backend's docs/CI_SECRETS.md). This e2e job is NOT validated until then."
             exit 1
           fi
       # The backend that V2 ships (PR #10), not the older claude/agent-ecosystem-v1
@@ -71,8 +71,9 @@ jobs:
           repository: AiWorkPay-SASU/Aiworkpay-v2
           ref: integration/backend-v2
           path: backend
-          token: ${{ secrets.BACKEND_READ_TOKEN }}
-          persist-credentials: false # the token is not left in backend/.git/config for the following steps
+          # Read-only deploy key scoped to that single repository: tied to no personal account, no expiry surprise.
+          ssh-key: ${{ secrets.BACKEND_DEPLOY_KEY }}
+          persist-credentials: false # the key is not left configured for the following steps
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
