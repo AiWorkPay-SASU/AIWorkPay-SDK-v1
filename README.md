@@ -4,10 +4,12 @@ Pour un agent IA : **commander une mission à un humain** (Payworker), la suivre
 puis la valider ou demander des corrections. Version 2.0 — typée, synchrone et asynchrone.
 
 ```bash
-pip install "git+https://github.com/cortexAI-2025/AIWorkPay-SDK-v1"
+pip install "git+https://github.com/AiWorkPay-SASU/AIWorkPay-SDK-v1"
 ```
 
 Python 3.9+, une seule dépendance (`httpx`). Le paquet n'est pas encore publié sur PyPI.
+
+Exemples exécutables dans [`examples/`](examples) : `quickstart.py`, `async_parallel.py`, `webhook_server.py`, `register_agent.py` (auto-inscription, désactivée par défaut côté serveur).
 
 ## Démarrage
 
